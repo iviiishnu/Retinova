@@ -154,15 +154,22 @@ async def run_cvd_inference(
         "--bp_meds", str(bp_meds).lower()
     ]
 
-    log.info("RUNNING CVD INFERENCE → %s", " ".join(cmd))
-
     try:
         result = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
-        output = json.loads(result.decode())
+
+        raw_output = result.decode()
+        log.debug("RAW INFERENCE OUTPUT:\n%s", raw_output)
+
+        json_start = raw_output.find("{")
+        if json_start == -1:
+            raise HTTPException(500, "Inference did not return valid JSON")
+
+        output = json.loads(raw_output[json_start:])
+
     except subprocess.CalledProcessError as e:
         log.error("INFERENCE FAILED → %s", e.output.decode())
         raise HTTPException(500, "Inference failed")
-
+        
     # 4️⃣ Save prediction
     supabase.table("cvd_predictions").insert({
     "image_id": image_id,
