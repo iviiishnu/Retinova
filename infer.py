@@ -7,13 +7,12 @@ from PIL import Image
 from torchvision import transforms
 
 # -------------------------------------------------
-# PATH SETUP
+# LOCAL PATH SETUP (IMPORTANT)
 # -------------------------------------------------
-SRC_PATH = "/kaggle/input/retinova-1/Retina_ai/src"
-if SRC_PATH not in sys.path:
-    sys.path.insert(0, SRC_PATH)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(BASE_DIR)
 
-from fusion_model import FusionEffNetTabular
+from src.fusion_model import FusionEffNetTabular
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -58,7 +57,7 @@ def apply_frs(base_ml_risk, age, smoker, diabetes, sbp, bp_meds):
     return min(risk, 0.99), explanations
 
 # -------------------------------------------------
-# TRANSFORMS
+# IMAGE TRANSFORMS
 # -------------------------------------------------
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
@@ -101,9 +100,10 @@ def main():
     parser.add_argument("--sbp", type=int, required=True)
     parser.add_argument("--bp_meds", type=lambda x: x.lower() == "true", required=True)
 
+    # ✅ LOCAL MODEL PATH
     parser.add_argument(
         "--weights",
-        default="/kaggle/input/retinova-1/Retina_ai/models/baseline_best.pth"
+        default="models/baseline_best.pth"
     )
 
     args = parser.parse_args()
@@ -137,7 +137,7 @@ def main():
         "clinical_explanations": explanations
     }
 
-    print(json.dumps(output))
+    print(json.dumps(output, indent=2))
 
 
 if __name__ == "__main__":
